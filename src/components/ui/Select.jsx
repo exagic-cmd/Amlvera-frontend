@@ -1,0 +1,20 @@
+/* eslint-disable react/prop-types -- no prop-types package; Zod validates data at the API boundary per AGENTS.md */
+import { forwardRef } from 'react'
+import { cn } from '../../lib/utils'
+
+export const Select = forwardRef(function Select({ className, error, children, ...props }, ref) {
+  return (
+    <select
+      ref={ref}
+      aria-invalid={error ? 'true' : undefined}
+      className={cn(
+        'h-10 w-full rounded-md border bg-surface px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        error ? 'border-danger focus-visible:ring-danger' : 'border-border focus-visible:ring-brand-500',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  )
+})

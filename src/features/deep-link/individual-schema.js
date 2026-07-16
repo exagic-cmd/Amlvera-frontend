@@ -1,0 +1,30 @@
+import { z } from 'zod'
+
+export const individualSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
+  email: z.string().email('Enter a valid email'),
+  residentStatus: z.string().min(1, 'Select resident status'),
+  gender: z.string().min(1, 'Select gender'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  nationality: z.string().min(1, 'Select nationality'),
+  countryOfResidence: z.string().min(1, 'Select country of residence'),
+  doYouHaveCitizenship: z.string().min(1, 'Select a value'),
+  specificOtherNationality: z.string().optional(),
+  passportNumber: z.string().min(1, 'Passport number is required'),
+  placeOfBirth: z.string().min(1, 'Place of birth is required'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  address: z.string().min(1, 'Address is required'),
+  state: z.string().min(1, 'Select state'),
+  townCity: z.string().min(1, 'Town/City is required'),
+  zipCode: z.string().min(1, 'Zip code is required'),
+  contactNumber: z.string().min(1, 'Contact number is required'),
+  workType: z.string().min(1, 'Select work type'),
+  industry: z.string().min(1, 'Select industry'),
+  productTypeOffered: z.string().min(1, 'Select product type'),
+  productOffered: z.string().min(1, 'Product offered is required'),
+  companyName: z.string().min(1, 'Company name is required'),
+  positionInCompany: z.string().min(1, 'Position is required'),
+  faceToFaceDeclaration: z.enum(['yes', 'no'], {
+    errorMap: () => ({ message: 'Select whether face-to-face is accepted' }),
+  }),
+})
