@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, ChevronDown, Lock, LogOut, Search, User } from 'lucide-react'
-import { Button } from '../../components/ui/Button'
+import { Bell, ChevronDown, Lock, LogOut, User } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export default function Topbar() {
@@ -33,78 +32,63 @@ export default function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface">
-      <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-3 px-5 py-3">
-        <div className="flex flex-1 items-center gap-3">
-          <div className="relative flex-1 max-w-lg">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            <input
-              type="search"
-              placeholder="Search menus..."
-              className="w-full rounded-2xl border border-border bg-surface py-2.5 pl-10 pr-3 text-sm text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-            />
-          </div>
-          <Button type="button" variant="outline" size="sm" className="rounded-2xl px-3 py-2">
-            Filter
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
+    <header className="z-30 flex-shrink-0 border-b border-border bg-surface">
+      <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-end gap-2 px-6 h-[69px]">
+        <div className="flex items-center gap-1">
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white text-text transition hover:border-brand-500 hover:text-brand-600"
+            className="inline-flex h-[36px] w-[36px] items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-alt hover:text-text"
             aria-label="Notifications"
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-5 w-5" />
           </button>
 
-          <div className="relative">
-            <Button
+          <div className="relative flex items-center">
+            <button
               ref={buttonRef}
-              variant="outline"
-              className="inline-flex items-center gap-2 rounded-2xl px-3 py-2"
+              className="inline-flex h-[36px] items-center gap-2 rounded-lg px-2 transition hover:bg-surface-alt"
               type="button"
               onClick={() => setOpen((value) => !value)}
             >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white">
-                <User className="h-4 w-4" aria-hidden="true" />
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white">
+                <User className="h-[14px] w-[14px]" aria-hidden="true" />
               </span>
-              <span className="hidden items-center gap-1 text-sm sm:inline-flex">
+              <span className="hidden items-center gap-1.5 text-sm sm:inline-flex">
                 <span className="font-medium text-text">Jane Doe</span>
-                <ChevronDown className="h-4 w-4 text-text-muted" />
+                <ChevronDown className="h-[14px] w-[14px] text-text-muted" />
               </span>
-            </Button>
+            </button>
 
             {open && (
               <div
                 ref={menuRef}
                 className={cn(
-                  'absolute right-0 top-full mt-2 w-60 rounded-3xl border border-border bg-white p-2 shadow-xl',
-                  'ring-1 ring-black ring-opacity-5',
+                  'absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-white p-1.5 shadow-sm',
                 )}
               >
                 <button
                   type="button"
                   onClick={() => navigateTo('/app/profile/update')}
-                  className="flex w-full items-center gap-2 rounded-2xl px-4 py-2 text-left text-sm text-text transition hover:bg-surface-alt"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-alt"
                 >
-                  <User className="h-4 w-4 text-text-muted" />
+                  <User className="h-[18px] w-[18px] text-text-muted" />
                   <span>Update profile</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => navigateTo('/app/profile/change-password')}
-                  className="flex w-full items-center gap-2 rounded-2xl px-4 py-2 text-left text-sm text-text transition hover:bg-surface-alt"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-alt"
                 >
-                  <Lock className="h-4 w-4 text-text-muted" />
+                  <Lock className="h-[18px] w-[18px] text-text-muted" />
                   <span>Change password</span>
                 </button>
+                <div className="my-1 border-t border-border" />
                 <button
                   type="button"
                   onClick={() => navigateTo('/login')}
-                  className="mt-2 flex w-full items-center gap-2 rounded-2xl bg-danger/10 px-4 py-2 text-left text-sm text-danger transition hover:bg-danger/20"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-danger transition hover:bg-danger/10"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-[18px] w-[18px]" />
                   <span>Logout</span>
                 </button>
               </div>

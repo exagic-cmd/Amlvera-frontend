@@ -1,41 +1,105 @@
+import { useState } from 'react'
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { Card } from '../../components/ui/Card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/Table'
 
-const profileRows = [
+const data = [
   { name: 'Sajid Manzoor', email: 'sajid@example.com', role: 'Admin', status: 'Active' },
   { name: 'Nadia Khan', email: 'nadia@example.com', role: 'Editor', status: 'Active' },
   { name: 'Aamir Ali', email: 'aamir@example.com', role: 'Viewer', status: 'Inactive' },
 ]
 
+const columns = [
+  {
+    accessorKey: 'name',
+    header: 'Name',
+  },
+  {
+    accessorKey: 'email',
+    header: 'Email',
+  },
+  {
+    accessorKey: 'role',
+    header: 'Role',
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => (
+      <div className="text-text-muted">{row.getValue('status')}</div>
+    )
+  },
+]
+
 export default function ProfilePage() {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Profile</h1>
+        <h1 className="text-2xl font-semibold text-text">Profile</h1>
         <p className="mt-1 text-sm text-text-muted">Review and manage profile records in the table below.</p>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left text-sm">
-            <thead className="bg-surface-alt text-text-muted">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Role</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-surface">
-              {profileRows.map((row) => (
-                <tr key={row.email} className="hover:bg-surface-alt">
-                  <td className="px-4 py-4">{row.name}</td>
-                  <td className="px-4 py-4">{row.email}</td>
-                  <td className="px-4 py-4">{row.role}</td>
-                  <td className="px-4 py-4 text-sm text-text-muted">{row.status}</td>
-                </tr>
+      <Card className="overflow-hidden border border-border">
+        <div className="overflow-x-auto bg-surface rounded-lg">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </Card>
     </div>

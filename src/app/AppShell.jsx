@@ -4,11 +4,11 @@ import Topbar from '../components/layout/Topbar'
 
 export default function AppShell() {
   return (
-    <div className="min-h-screen bg-surface-alt text-text">
-      <Topbar />
-      <div className="flex min-h-screen pt-0">
-        <Sidebar />
-        <main className="flex-1 p-6 sm:p-8">
+    <div className="flex h-screen overflow-hidden bg-surface-alt text-text">
+      <Sidebar />
+      <div className="flex flex-col flex-1 w-full overflow-hidden">
+        <Topbar />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>
