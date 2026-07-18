@@ -9,7 +9,27 @@ import { Label } from '../../components/ui/Label'
 import { Modal } from '../../components/ui/Modal'
 import { Select } from '../../components/ui/Select'
 import { ImageEditor } from '../../components/ui/ImageEditor'
+import {
+  Attachment,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+} from '../../components/ui/attachment'
+import { FileText, X } from 'lucide-react'
 import { selfServiceIndividualSchema } from './individual-schema'
+
+const formatFileSize = (bytes) => {
+  if (!bytes && bytes !== 0) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const isImageFile = (file) => file?.type?.startsWith('image/')
 
 const steps = ['Upload documents', 'Document proof', 'Profile data', 'Account info', 'Preview', 'Finish']
 
@@ -476,7 +496,27 @@ export default function IndividualOnboardingFlow() {
                     <span className="font-semibold text-brand-600">UPLOAD</span>
                   </label>
                   {proofOfAddress && (
-                    <p className="mt-4 text-sm text-text">{proofOfAddress.file.name}</p>
+                    <Attachment className="mt-4 w-full text-left">
+                      <AttachmentMedia variant={isImageFile(proofOfAddress.file) ? 'image' : 'icon'}>
+                        {isImageFile(proofOfAddress.file) ? (
+                          <img src={proofOfAddress.url} alt={proofOfAddress.file.name} />
+                        ) : (
+                          <FileText />
+                        )}
+                      </AttachmentMedia>
+                      <AttachmentContent>
+                        <AttachmentTitle>{proofOfAddress.file.name}</AttachmentTitle>
+                        <AttachmentDescription>{formatFileSize(proofOfAddress.file.size)}</AttachmentDescription>
+                      </AttachmentContent>
+                      <AttachmentActions>
+                        <AttachmentAction
+                          aria-label="Remove proof of address"
+                          onClick={() => setProofOfAddress(null)}
+                        >
+                          <X />
+                        </AttachmentAction>
+                      </AttachmentActions>
+                    </Attachment>
                   )}
                 </div>
                 <div className="rounded-3xl border border-border bg-surface p-6 text-center">
@@ -492,7 +532,27 @@ export default function IndividualOnboardingFlow() {
                     <span className="font-semibold text-brand-600">UPLOAD</span>
                   </label>
                   {visaDocument && (
-                    <p className="mt-4 text-sm text-text">{visaDocument.file.name}</p>
+                    <Attachment className="mt-4 w-full text-left">
+                      <AttachmentMedia variant={isImageFile(visaDocument.file) ? 'image' : 'icon'}>
+                        {isImageFile(visaDocument.file) ? (
+                          <img src={visaDocument.url} alt={visaDocument.file.name} />
+                        ) : (
+                          <FileText />
+                        )}
+                      </AttachmentMedia>
+                      <AttachmentContent>
+                        <AttachmentTitle>{visaDocument.file.name}</AttachmentTitle>
+                        <AttachmentDescription>{formatFileSize(visaDocument.file.size)}</AttachmentDescription>
+                      </AttachmentContent>
+                      <AttachmentActions>
+                        <AttachmentAction
+                          aria-label="Remove visa document"
+                          onClick={() => setVisaDocument(null)}
+                        >
+                          <X />
+                        </AttachmentAction>
+                      </AttachmentActions>
+                    </Attachment>
                   )}
                 </div>
                 <div className="rounded-3xl border border-border bg-surface p-6 text-center">
@@ -507,13 +567,31 @@ export default function IndividualOnboardingFlow() {
                     <span className="font-semibold text-brand-600">Drop files here</span>
                   </label>
                   {otherDocuments.length > 0 && (
-                    <ul className="mt-4 space-y-2 text-sm text-text">
+                    <AttachmentGroup className="mt-4 text-left">
                       {otherDocuments.map((item, index) => (
-                        <li key={`${item.file.name}-${index}`} className="rounded-2xl bg-surface-alt p-3">
-                          {item.file.name}
-                        </li>
+                        <Attachment key={`${item.file.name}-${index}`}>
+                          <AttachmentMedia variant={isImageFile(item.file) ? 'image' : 'icon'}>
+                            {isImageFile(item.file) ? (
+                              <img src={item.url} alt={item.file.name} />
+                            ) : (
+                              <FileText />
+                            )}
+                          </AttachmentMedia>
+                          <AttachmentContent>
+                            <AttachmentTitle>{item.file.name}</AttachmentTitle>
+                            <AttachmentDescription>{formatFileSize(item.file.size)}</AttachmentDescription>
+                          </AttachmentContent>
+                          <AttachmentActions>
+                            <AttachmentAction
+                              aria-label={`Remove ${item.file.name}`}
+                              onClick={() => setOtherDocuments((prev) => prev.filter((_, i) => i !== index))}
+                            >
+                              <X />
+                            </AttachmentAction>
+                          </AttachmentActions>
+                        </Attachment>
                       ))}
-                    </ul>
+                    </AttachmentGroup>
                   )}
                 </div>
               </div>

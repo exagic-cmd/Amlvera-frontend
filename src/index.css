@@ -42,14 +42,39 @@
 
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
-}
 
-.dark {
-  --color-surface: #0f172a;
-  --color-surface-alt: #1e293b;
-  --color-border: #334155;
-  --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
+  /*
+   * Shadcn tokens (Tailwind v4 format)
+   * Registers color utilities like bg-background, text-foreground,
+   * border-input, bg-popover, text-primary, etc.
+   */
+  --radius: 0.5rem;
+
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+
+  --color-primary: #006838;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #f8fafc;
+  --color-secondary-foreground: #0f172a;
+
+  --color-muted: #f8fafc;
+  --color-muted-foreground: #64748b;
+
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+
+  --color-destructive: #dc2626;
+
+  --color-input: #e2e8f0;
+  --color-ring: #006838;
 }
 
 :root {
@@ -58,6 +83,40 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --color-surface: #0f172a;
+  --color-surface-alt: #1e293b;
+  --color-border: #334155;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+
+  --color-background: #0f172a;
+  --color-foreground: #f1f5f9;
+
+  --color-popover: #1e293b;
+  --color-popover-foreground: #f1f5f9;
+
+  --color-card: #1e293b;
+  --color-card-foreground: #f1f5f9;
+
+  --color-primary: #408e6a;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #1e293b;
+  --color-secondary-foreground: #f1f5f9;
+
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+
+  --color-accent: #334155;
+  --color-accent-foreground: #f1f5f9;
+
+  --color-destructive: #dc2626;
+
+  --color-input: #334155;
+  --color-ring: #408e6a;
 }
 
 body {

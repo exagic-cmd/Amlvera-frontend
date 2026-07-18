@@ -2,11 +2,19 @@ import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getData } from 'country-list'
-import { Button } from '../../components/ui/Button'
+import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/Card'
-import { Input } from '../../components/ui/Input'
-import { Label } from '../../components/ui/Label'
-import { Select } from '../../components/ui/Select'
+import { Input } from '../../components/ui/input'
+import { SearchableSelect } from '../../components/ui/SearchableSelect'
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../components/ui/form'
 import { individualSchema } from './individual-schema'
 
 const residentStatuses = ['Resident', 'Non-resident', 'Visitor']
@@ -16,7 +24,6 @@ const workTypes = ['Full-time', 'Part-time', 'Contract']
 const industries = ['Banking', 'Retail', 'Technology', 'Healthcare', 'Manufacturing']
 const productTypes = ['Loan', 'Savings', 'Investments', 'Insurance', 'Other']
 const stateOptions = [
-  { code: '', label: 'Select state' },
   { code: 'NY', label: 'New York' },
   { code: 'CA', label: 'California' },
   { code: 'TX', label: 'Texas' },
@@ -24,12 +31,7 @@ const stateOptions = [
 ]
 
 export default function IndividualOnboardingPage() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(individualSchema),
     defaultValues: {
       fullName: '',
@@ -61,23 +63,14 @@ export default function IndividualOnboardingPage() {
     },
   })
 
-  const selectedCitizenship = watch('doYouHaveCitizenship')
+  const { isSubmitting } = form.formState
 
   const countryOptions = useMemo(
-    () => [
-      { code: '', name: 'Select country' },
-      ...getData().map((country) => ({ code: country.code, name: country.name })),
-    ],
+    () => getData().map((country) => ({ value: country.code, label: country.name })),
     [],
   )
 
-  const nationalityOptions = useMemo(
-    () => [
-      { code: '', name: 'Select nationality' },
-      ...getData().map((country) => ({ code: country.code, name: country.name })),
-    ],
-    [],
-  )
+  const nationalityOptions = countryOptions
 
   const onSubmit = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 800))
@@ -91,244 +84,403 @@ export default function IndividualOnboardingPage() {
         <p className="mt-1 text-sm text-text-muted">Fill in all fields to generate the onboarding link for the individual.</p>
       </div>
 
-      <Card className="space-y-8 p-6">
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
-          <section className="grid gap-6 xl:grid-cols-3">
-            <div>
-              <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" {...register('fullName')} error={!!errors.fullName} />
-              {errors.fullName && <p className="mt-1 text-sm text-danger">{errors.fullName.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register('email')} error={!!errors.email} />
-              {errors.email && <p className="mt-1 text-sm text-danger">{errors.email.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="residentStatus">Resident status</Label>
-              <Select id="residentStatus" {...register('residentStatus')} error={!!errors.residentStatus}>
-                <option value="">Select resident status</option>
-                {residentStatuses.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
-              {errors.residentStatus && <p className="mt-1 text-sm text-danger">{errors.residentStatus.message}</p>}
-            </div>
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-3">
-            <div>
-              <Label htmlFor="gender">Gender</Label>
-              <Select id="gender" {...register('gender')} error={!!errors.gender}>
-                <option value="">Select gender</option>
-                {genders.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
-              {errors.gender && <p className="mt-1 text-sm text-danger">{errors.gender.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="dateOfBirth">Date of birth</Label>
-              <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} error={!!errors.dateOfBirth} />
-              {errors.dateOfBirth && <p className="mt-1 text-sm text-danger">{errors.dateOfBirth.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="nationality">Nationality</Label>
-              <Select id="nationality" {...register('nationality')} error={!!errors.nationality}>
-                {nationalityOptions.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.name}
-                  </option>
-                ))}
-              </Select>
-              {errors.nationality && <p className="mt-1 text-sm text-danger">{errors.nationality.message}</p>}
-            </div>
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-3">
-            <div>
-              <Label htmlFor="countryOfResidence">Country of residence</Label>
-              <Select id="countryOfResidence" {...register('countryOfResidence')} error={!!errors.countryOfResidence}>
-                {countryOptions.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.name}
-                  </option>
-                ))}
-              </Select>
-              {errors.countryOfResidence && (
-                <p className="mt-1 text-sm text-danger">{errors.countryOfResidence.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="doYouHaveCitizenship">Do you have citizenship?</Label>
-              <Select id="doYouHaveCitizenship" {...register('doYouHaveCitizenship')} error={!!errors.doYouHaveCitizenship}>
-                <option value="">Select option</option>
-                {citizenshipOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
-              {errors.doYouHaveCitizenship && (
-                <p className="mt-1 text-sm text-danger">{errors.doYouHaveCitizenship.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="specificOtherNationality">Specify other nationality</Label>
-              <Input id="specificOtherNationality" {...register('specificOtherNationality')} error={!!errors.specificOtherNationality} />
-              {errors.specificOtherNationality && (
-                <p className="mt-1 text-sm text-danger">{errors.specificOtherNationality.message}</p>
-              )}
-            </div>
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-3">
-            <div>
-              <Label htmlFor="passportNumber">Passport number</Label>
-              <Input id="passportNumber" {...register('passportNumber')} error={!!errors.passportNumber} />
-              {errors.passportNumber && <p className="mt-1 text-sm text-danger">{errors.passportNumber.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="passportExpiry">Passport expiry</Label>
-              <Input id="passportExpiry" type="date" {...register('passportExpiry')} error={!!errors.passportExpiry} />
-              {errors.passportExpiry && <p className="mt-1 text-sm text-danger">{errors.passportExpiry.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="externalReferenceNumber">External reference number</Label>
-              <Input id="externalReferenceNumber" {...register('externalReferenceNumber')} error={!!errors.externalReferenceNumber} />
-              {errors.externalReferenceNumber && (
-                <p className="mt-1 text-sm text-danger">{errors.externalReferenceNumber.message}</p>
-              )}
-            </div>
-          </section>
-
-          <section className="space-y-4 rounded-3xl border border-border bg-surface-alt p-5">
-            <div className="grid gap-6 xl:grid-cols-3">
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" {...register('address')} error={!!errors.address} />
-                {errors.address && <p className="mt-1 text-sm text-danger">{errors.address.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Select id="state" {...register('state')} error={!!errors.state}>
-                  {stateOptions.map((option) => (
-                    <option key={option.code} value={option.code}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-                {errors.state && <p className="mt-1 text-sm text-danger">{errors.state.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="townCity">Town / City</Label>
-                <Input id="townCity" {...register('townCity')} error={!!errors.townCity} />
-                {errors.townCity && <p className="mt-1 text-sm text-danger">{errors.townCity.message}</p>}
-              </div>
-            </div>
-
-            <div className="grid gap-6 xl:grid-cols-3">
-              <div>
-                <Label htmlFor="zipCode">Zip code / Postal code</Label>
-                <Input id="zipCode" {...register('zipCode')} error={!!errors.zipCode} />
-                {errors.zipCode && <p className="mt-1 text-sm text-danger">{errors.zipCode.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="contactNumber">Contact number</Label>
-                <Input id="contactNumber" {...register('contactNumber')} error={!!errors.contactNumber} />
-                {errors.contactNumber && <p className="mt-1 text-sm text-danger">{errors.contactNumber.message}</p>}
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4 rounded-3xl border border-border bg-surface-alt p-5">
-            <div className="grid gap-6 xl:grid-cols-3">
-              <div>
-                <Label htmlFor="workType">Work type</Label>
-                <Select id="workType" {...register('workType')} error={!!errors.workType}>
-                  <option value="">Select work type</option>
-                  {workTypes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-                {errors.workType && <p className="mt-1 text-sm text-danger">{errors.workType.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="industry">Industry</Label>
-                <Select id="industry" {...register('industry')} error={!!errors.industry}>
-                  <option value="">Select industry</option>
-                  {industries.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-                {errors.industry && <p className="mt-1 text-sm text-danger">{errors.industry.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="productTypeOffered">Product type offered</Label>
-                <Select id="productTypeOffered" {...register('productTypeOffered')} error={!!errors.productTypeOffered}>
-                  <option value="">Select product type</option>
-                  {productTypes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-                {errors.productTypeOffered && (
-                  <p className="mt-1 text-sm text-danger">{errors.productTypeOffered.message}</p>
+      <Card className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-8">
+            <section className="grid gap-6 xl:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-            </div>
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="residentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resident status</FormLabel>
+                    <SearchableSelect
+                      options={residentStatuses.map((v) => ({ label: v, value: v }))}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select resident status"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
 
-            <div className="grid gap-6 xl:grid-cols-3">
-              <div>
-                <Label htmlFor="productOffered">Product offered</Label>
-                <Input id="productOffered" {...register('productOffered')} error={!!errors.productOffered} />
-                {errors.productOffered && <p className="mt-1 text-sm text-danger">{errors.productOffered.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="companyName">Company name</Label>
-                <Input id="companyName" {...register('companyName')} error={!!errors.companyName} />
-                {errors.companyName && <p className="mt-1 text-sm text-danger">{errors.companyName.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="positionInCompany">Position in company</Label>
-                <Input id="positionInCompany" {...register('positionInCompany')} error={!!errors.positionInCompany} />
-                {errors.positionInCompany && <p className="mt-1 text-sm text-danger">{errors.positionInCompany.message}</p>}
-              </div>
-            </div>
-          </section>
+            <section className="grid gap-6 xl:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <SearchableSelect
+                      options={genders.map((v) => ({ label: v, value: v }))}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select gender"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="nationality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nationality</FormLabel>
+                    <SearchableSelect
+                      options={nationalityOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select nationality"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
 
-          <section className="rounded-3xl border border-border bg-surface-alt p-5">
-            <Label className="mb-4 block text-sm font-semibold text-text">Face to Face Declaration</Label>
-            <div className="flex flex-wrap gap-6">
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="radio" value="yes" {...register('faceToFaceDeclaration')} className="h-4 w-4 accent-brand-600" />
-                Yes
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="radio" value="no" {...register('faceToFaceDeclaration')} className="h-4 w-4 accent-brand-600" />
-                No
-              </label>
-            </div>
-            {errors.faceToFaceDeclaration && (
-              <p className="mt-3 text-sm text-danger">{errors.faceToFaceDeclaration.message}</p>
-            )}
-          </section>
+            <section className="grid gap-6 xl:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="countryOfResidence"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country of residence</FormLabel>
+                    <SearchableSelect
+                      options={countryOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select country"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="doYouHaveCitizenship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Do you have citizenship?</FormLabel>
+                    <SearchableSelect
+                      options={citizenshipOptions.map((v) => ({ label: v, value: v }))}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select option"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="specificOtherNationality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specify other nationality</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
 
-          <div className="flex justify-end">
-            <Button type="submit" loading={isSubmitting} className="w-full sm:w-auto">
-              {isSubmitting ? 'Saving…' : 'Save individual onboarding'}
-            </Button>
-          </div>
-        </form>
+            <section className="grid gap-6 xl:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="passportNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Passport number</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="passportExpiry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Passport expiry</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="externalReferenceNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>External reference number</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
+
+            <section className="space-y-4 rounded-3xl border border-border bg-surface-alt p-5">
+              <div className="grid gap-6 xl:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <SearchableSelect
+                        options={stateOptions.map(s => ({ label: s.label, value: s.code }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select state"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="townCity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Town / City</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-6 xl:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zip code / Postal code</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            <section className="space-y-4 rounded-3xl border border-border bg-surface-alt p-5">
+              <div className="grid gap-6 xl:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="workType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Work type</FormLabel>
+                      <SearchableSelect
+                        options={workTypes.map((v) => ({ label: v, value: v }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select work type"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry</FormLabel>
+                      <SearchableSelect
+                        options={industries.map((v) => ({ label: v, value: v }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select industry"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="productTypeOffered"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product type offered</FormLabel>
+                      <SearchableSelect
+                        options={productTypes.map((v) => ({ label: v, value: v }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select product type"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-6 xl:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="productOffered"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product offered</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="positionInCompany"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position in company</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-border bg-surface-alt p-5">
+              <FormField
+                control={form.control}
+                name="faceToFaceDeclaration"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Face to Face Declaration</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-wrap gap-6"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="yes" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="no" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+                {isSubmitting ? 'Saving…' : 'Save individual onboarding'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </Card>
     </div>
   )

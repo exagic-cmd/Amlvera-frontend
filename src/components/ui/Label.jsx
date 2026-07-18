@@ -1,6 +1,23 @@
-/* eslint-disable react/prop-types -- no prop-types package; Zod validates data at the API boundary per AGENTS.md */
-import { cn } from '../../lib/utils'
+import * as React from "react"
+import { Label as LabelPrimitive } from "radix-ui"
 
-export function Label({ className, ...props }) {
-  return <label className={cn('mb-1.5 block text-sm font-medium text-text', className)} {...props} />
-}
+import { cn } from "@/lib/utils"
+
+const Label = React.forwardRef(function Label({
+  className,
+  ...props
+}, ref) {
+  return (
+    <LabelPrimitive.Root
+      ref={ref}
+      data-slot="label"
+      className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className
+      )}
+      {...props} />
+  );
+})
+Label.displayName = "Label"
+
+export { Label }
