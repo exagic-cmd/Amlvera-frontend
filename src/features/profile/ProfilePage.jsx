@@ -1,54 +1,104 @@
-import { useState } from 'react'
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
-import { Card } from '../../components/ui/Card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../components/ui/Table'
+import { DataTable } from '../../components/ui/data-table'
+import { Button } from '../../components/ui/Button'
 
 const data = [
-  { name: 'Sajid Manzoor', email: 'sajid@example.com', role: 'Admin', status: 'Active' },
-  { name: 'Nadia Khan', email: 'nadia@example.com', role: 'Editor', status: 'Active' },
-  { name: 'Aamir Ali', email: 'aamir@example.com', role: 'Viewer', status: 'Inactive' },
+  {
+    id: '1001',
+    name: 'Sajid Manzoor',
+    country: 'United Arab Emirates',
+    category: 'Individual',
+    associatedCompany: 'Amlvera LLC',
+    registrationDate: '2023-10-12',
+    onboardedBy: 'System',
+    uaePass: 'Linked',
+    status: 'Active',
+  },
+  {
+    id: '1002',
+    name: 'Nadia Khan',
+    country: 'United Kingdom',
+    category: 'Corporate',
+    associatedCompany: 'Tech Corp',
+    registrationDate: '2023-11-05',
+    onboardedBy: 'Admin',
+    uaePass: 'Pending',
+    status: 'In Progress',
+  },
+  {
+    id: '1003',
+    name: 'Aamir Ali',
+    country: 'Saudi Arabia',
+    category: 'Individual',
+    associatedCompany: 'None',
+    registrationDate: '2023-12-20',
+    onboardedBy: 'Self',
+    uaePass: 'Not Linked',
+    status: 'Inactive',
+  },
 ]
 
 const columns = [
   {
+    accessorKey: 'id',
+    header: 'Id',
+  },
+  {
     accessorKey: 'name',
-    header: 'Name',
+    header: 'NAME',
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
+    accessorKey: 'country',
+    header: 'COUNTRY',
   },
   {
-    accessorKey: 'role',
-    header: 'Role',
+    accessorKey: 'category',
+    header: 'Category',
+  },
+  {
+    accessorKey: 'associatedCompany',
+    header: 'Associated Company',
+  },
+  {
+    accessorKey: 'registrationDate',
+    header: 'REGISTRATION DATE',
+  },
+  {
+    accessorKey: 'onboardedBy',
+    header: 'Onboarded By',
+  },
+  {
+    accessorKey: 'uaePass',
+    header: 'UAE PASS',
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'STATUS',
+    cell: ({ row }) => {
+      const status = row.getValue('status')
+      const colorClass = 
+        status === 'Active' ? 'text-brand-600 bg-brand-50' : 
+        status === 'Inactive' ? 'text-danger bg-danger/10' : 
+        'text-navy-600 bg-navy-50'
+        
+      return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
+          {status}
+        </span>
+      )
+    }
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
     cell: ({ row }) => (
-      <div className="text-text-muted">{row.getValue('status')}</div>
+      <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+        View
+      </Button>
     )
   },
 ]
 
 export default function ProfilePage() {
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
-
   return (
     <div className="space-y-6">
       <div>
@@ -56,52 +106,12 @@ export default function ProfilePage() {
         <p className="mt-1 text-sm text-text-muted">Review and manage profile records in the table below.</p>
       </div>
 
-      <Card className="overflow-hidden border border-border">
-        <div className="overflow-x-auto bg-surface rounded-lg">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={data}
+        searchKey="name"
+        searchPlaceholder="Search profiles by name..."
+      />
     </div>
   )
 }

@@ -7,8 +7,17 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Label } from '../../components/ui/Label'
 import { Modal } from '../../components/ui/Modal'
-import { Select } from '../../components/ui/Select'
 import { ImageEditor } from '../../components/ui/ImageEditor'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../components/ui/form'
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
+import { SearchableSelect } from '../../components/ui/SearchableSelect'
 import {
   Attachment,
   AttachmentGroup,
@@ -19,7 +28,7 @@ import {
   AttachmentActions,
   AttachmentAction,
 } from '../../components/ui/attachment'
-import { FileText, X } from 'lucide-react'
+import { FileText, X, Check } from 'lucide-react'
 import { selfServiceIndividualSchema } from './individual-schema'
 
 const formatFileSize = (bytes) => {
@@ -47,14 +56,8 @@ export default function IndividualOnboardingFlow() {
   const [lastPoint, setLastPoint] = useState(null)
   const [formError, setFormError] = useState('')
   const signatureCanvasRef = useRef(null)
-  const {
-    register,
-    handleSubmit,
-    trigger,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm({
+  
+  const form = useForm({
     resolver: zodResolver(selfServiceIndividualSchema),
     defaultValues: {
       fullName: '',
@@ -111,7 +114,9 @@ export default function IndividualOnboardingFlow() {
   )
 
   const countryOptions = nationalityOptions
-  const values = watch()
+  const values = form.watch()
+  const { isSubmitting, errors } = form.formState
+  const { register, handleSubmit, trigger, watch, setValue } = form
 
   const pepQuestions = [
     { name: 'pepCurrentPublicPosition', label: 'I currently hold a public position' },
@@ -192,10 +197,8 @@ export default function IndividualOnboardingFlow() {
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-    const x = (event.clientX - rect.left) * scaleX
-    const y = (event.clientY - rect.top) * scaleY
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
     const ctx = getSignatureContext()
     if (!ctx) return
 
@@ -217,10 +220,8 @@ export default function IndividualOnboardingFlow() {
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-    const x = (event.clientX - rect.left) * scaleX
-    const y = (event.clientY - rect.top) * scaleY
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
     const ctx = getSignatureContext()
     if (!ctx) return
 
@@ -418,22 +419,38 @@ export default function IndividualOnboardingFlow() {
       </div>
 
       <Card className="rounded-3xl p-6">
-        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="mb-8 relative z-0 flex w-full justify-between">
+          <div className="absolute left-0 top-4 -z-10 h-[2px] w-full -translate-y-1/2 bg-surface-alt" />
+          <div 
+            className="absolute left-0 top-4 -z-10 h-[2px] -translate-y-1/2 bg-brand-600 transition-all duration-300"
+            style={{ width: `${(Math.max(step, 0) / (steps.length - 1)) * 100}%` }}
+          />
           {steps.map((label, index) => (
-            <div key={label} className="space-y-2">
-              <p className={`text-xs font-semibold ${index === step ? 'text-brand-600' : 'text-text-muted'}`}>
+            <div key={label} className="flex flex-col items-center gap-2">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+                  index < step
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : index === step
+                    ? 'border-brand-600 bg-surface text-brand-600'
+                    : 'border-surface-alt bg-surface text-text-muted'
+                }`}
+              >
+                {index < step ? <Check className="h-4 w-4" /> : index + 1}
+              </div>
+              <p
+                className={`hidden w-20 text-center text-xs font-semibold leading-tight sm:block ${
+                  index <= step ? 'text-brand-600' : 'text-text-muted'
+                }`}
+              >
                 {label}
               </p>
-              <div
-                className={`h-1 rounded-full ${
-                  index <= step ? 'bg-brand-600' : 'bg-surface-alt'
-                }`}
-              />
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {step === 0 && (
             <div className="grid gap-6 md:grid-cols-2">
               <div className="rounded-3xl border border-border bg-surface p-6 text-center">
@@ -607,210 +624,450 @@ export default function IndividualOnboardingFlow() {
               ) : null}
               <div className="grid gap-6 lg:grid-cols-3">
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="fullName">Full name</Label>
-                    <Input id="fullName" {...register('fullName')} error={!!errors.fullName} />
-                    {errors.fullName && <p className="mt-1 text-sm text-danger">{errors.fullName.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register('email')} error={!!errors.email} />
-                    {errors.email && <p className="mt-1 text-sm text-danger">{errors.email.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="residentStatus">Resident status</Label>
-                    <Select id="residentStatus" {...register('residentStatus')} error={!!errors.residentStatus}>
-                      <option value="">Select resident status</option>
-                      <option value="resident">Resident</option>
-                      <option value="non-resident">Non-resident</option>
-                    </Select>
-                    {errors.residentStatus && <p className="mt-1 text-sm text-danger">{errors.residentStatus.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select id="gender" {...register('gender')} error={!!errors.gender}>
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </Select>
-                    {errors.gender && <p className="mt-1 text-sm text-danger">{errors.gender.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="dateOfBirth">Date of birth</Label>
-                    <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} error={!!errors.dateOfBirth} />
-                    {errors.dateOfBirth && <p className="mt-1 text-sm text-danger">{errors.dateOfBirth.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="nationality">Nationality</Label>
-                    <Select id="nationality" {...register('nationality')} error={!!errors.nationality}>
-                      {nationalityOptions.map((option) => (
-                        <option key={option.code} value={option.code}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </Select>
-                    {errors.nationality && <p className="mt-1 text-sm text-danger">{errors.nationality.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="countryOfResidence">Country of residence</Label>
-                    <Select id="countryOfResidence" {...register('countryOfResidence')} error={!!errors.countryOfResidence}>
-                      {countryOptions.map((option) => (
-                        <option key={option.code} value={option.code}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </Select>
-                    {errors.countryOfResidence && <p className="mt-1 text-sm text-danger">{errors.countryOfResidence.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="passportNumber">Passport number</Label>
-                    <Input id="passportNumber" {...register('passportNumber')} error={!!errors.passportNumber} />
-                    {errors.passportNumber && <p className="mt-1 text-sm text-danger">{errors.passportNumber.message}</p>}
-                  </div>
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-text">Do you have other nationalities?</p>
-                    <div className="flex flex-wrap gap-4">
-                      <label className="inline-flex items-center gap-2">
-                        <input type="radio" value="yes" {...register('otherNationalities')} />
-                        <span className="text-sm text-text">Yes</span>
-                      </label>
-                      <label className="inline-flex items-center gap-2">
-                        <input type="radio" value="no" {...register('otherNationalities')} />
-                        <span className="text-sm text-text">No</span>
-                      </label>
-                    </div>
-                    {errors.otherNationalities && <p className="mt-1 text-sm text-danger">{errors.otherNationalities.message}</p>}
-                  </div>
-                  {watch('otherNationalities') === 'yes' && (
-                    <div>
-                      <Label htmlFor="otherNationalityDetails">Specify other nationalities</Label>
-                      <Input id="otherNationalityDetails" {...register('otherNationalityDetails')} error={!!errors.otherNationalityDetails} />
-                      {errors.otherNationalityDetails && <p className="mt-1 text-sm text-danger">{errors.otherNationalityDetails.message}</p>}
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="residentStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Resident status</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Resident', value: 'resident' },
+                            { label: 'Non-resident', value: 'non-resident' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select resident status"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Male', value: 'male' },
+                            { label: 'Female', value: 'female' },
+                            { label: 'Other', value: 'other' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select gender"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dateOfBirth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date of birth</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="nationality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nationality</FormLabel>
+                        <SearchableSelect
+                          options={nationalityOptions.map(opt => ({ label: opt.name, value: opt.code }))}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select nationality"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="countryOfResidence"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country of residence</FormLabel>
+                        <SearchableSelect
+                          options={countryOptions.map(opt => ({ label: opt.name, value: opt.code }))}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select country"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="passportNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Passport number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="otherNationalities"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Do you have other nationalities?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-wrap gap-4"
+                          >
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="yes" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="no" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch('otherNationalities') === 'yes' && (
+                    <FormField
+                      control={form.control}
+                      name="otherNationalityDetails"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specify other nationalities</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
                 </div>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="nationalIdNumber">National ID number</Label>
-                    <Input id="nationalIdNumber" {...register('nationalIdNumber')} error={!!errors.nationalIdNumber} />
-                    {errors.nationalIdNumber && <p className="mt-1 text-sm text-danger">{errors.nationalIdNumber.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="nationalIdExpiry">National ID expiry</Label>
-                    <Input id="nationalIdExpiry" type="date" {...register('nationalIdExpiry')} error={!!errors.nationalIdExpiry} />
-                    {errors.nationalIdExpiry && <p className="mt-1 text-sm text-danger">{errors.nationalIdExpiry.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="passportExpiry">Passport expiry</Label>
-                    <Input id="passportExpiry" type="date" {...register('passportExpiry')} error={!!errors.passportExpiry} />
-                    {errors.passportExpiry && <p className="mt-1 text-sm text-danger">{errors.passportExpiry.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="externalReferenceNumber">External reference number</Label>
-                    <Input id="externalReferenceNumber" {...register('externalReferenceNumber')} error={!!errors.externalReferenceNumber} />
-                    {errors.externalReferenceNumber && <p className="mt-1 text-sm text-danger">{errors.externalReferenceNumber.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" {...register('address')} error={!!errors.address} />
-                    {errors.address && <p className="mt-1 text-sm text-danger">{errors.address.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input id="state" {...register('state')} error={!!errors.state} />
-                    {errors.state && <p className="mt-1 text-sm text-danger">{errors.state.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="townCity">Town / City</Label>
-                    <Input id="townCity" {...register('townCity')} error={!!errors.townCity} />
-                    {errors.townCity && <p className="mt-1 text-sm text-danger">{errors.townCity.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">Zip code / Postal code</Label>
-                    <Input id="zipCode" {...register('zipCode')} error={!!errors.zipCode} />
-                    {errors.zipCode && <p className="mt-1 text-sm text-danger">{errors.zipCode.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="dialingCode">Dialing code</Label>
-                    <Input id="dialingCode" {...register('dialingCode')} error={!!errors.dialingCode} />
-                    {errors.dialingCode && <p className="mt-1 text-sm text-danger">{errors.dialingCode.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="contactNumber">Phone number</Label>
-                    <Input id="contactNumber" {...register('contactNumber')} error={!!errors.contactNumber} />
-                    {errors.contactNumber && <p className="mt-1 text-sm text-danger">{errors.contactNumber.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="nationalIdNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>National ID number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="nationalIdExpiry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>National ID expiry</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="passportExpiry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Passport expiry</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="externalReferenceNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>External reference number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="townCity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Town / City</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Zip code / Postal code</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dialingCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dialing code</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contactNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="workType">Work type</Label>
-                    <Select id="workType" {...register('workType')} error={!!errors.workType}>
-                      <option value="">Select work type</option>
-                      <option value="full-time">Full-time</option>
-                      <option value="part-time">Part-time</option>
-                      <option value="contract">Contract</option>
-                    </Select>
-                    {errors.workType && <p className="mt-1 text-sm text-danger">{errors.workType.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="industry">Industry</Label>
-                    <Select id="industry" {...register('industry')} error={!!errors.industry}>
-                      <option value="">Select industry</option>
-                      <option value="finance">Finance</option>
-                      <option value="technology">Technology</option>
-                      <option value="healthcare">Healthcare</option>
-                    </Select>
-                    {errors.industry && <p className="mt-1 text-sm text-danger">{errors.industry.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="productTypeOffered">Product type offered to customer</Label>
-                    <Select id="productTypeOffered" {...register('productTypeOffered')} error={!!errors.productTypeOffered}>
-                      <option value="">Select product type</option>
-                      <option value="service">Service</option>
-                      <option value="software">Software</option>
-                      <option value="hardware">Hardware</option>
-                    </Select>
-                    {errors.productTypeOffered && <p className="mt-1 text-sm text-danger">{errors.productTypeOffered.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="productOffered">Product offered</Label>
-                    <Input id="productOffered" {...register('productOffered')} error={!!errors.productOffered} />
-                    {errors.productOffered && <p className="mt-1 text-sm text-danger">{errors.productOffered.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="companyName">Company name</Label>
-                    <Select id="companyName" {...register('companyName')} error={!!errors.companyName}>
-                      <option value="">Select company name</option>
-                      <option value="company-a">Company A</option>
-                      <option value="company-b">Company B</option>
-                    </Select>
-                    {errors.companyName && <p className="mt-1 text-sm text-danger">{errors.companyName.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="positionsInCompany">Positions in company</Label>
-                    <Select id="positionsInCompany" {...register('positionsInCompany')} error={!!errors.positionsInCompany}>
-                      <option value="">Select positions in company</option>
-                      <option value="manager">Manager</option>
-                      <option value="director">Director</option>
-                      <option value="owner">Owner</option>
-                    </Select>
-                    {errors.positionsInCompany && <p className="mt-1 text-sm text-danger">{errors.positionsInCompany.message}</p>}
-                  </div>
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-text">Customer met face-to-face?</p>
-                    <div className="flex flex-wrap gap-4">
-                      <label className="inline-flex items-center gap-2">
-                        <input type="radio" value="yes" {...register('faceToFaceDeclaration')} />
-                        <span className="text-sm text-text">Yes</span>
-                      </label>
-                      <label className="inline-flex items-center gap-2">
-                        <input type="radio" value="no" {...register('faceToFaceDeclaration')} />
-                        <span className="text-sm text-text">No</span>
-                      </label>
-                    </div>
-                    {errors.faceToFaceDeclaration && <p className="mt-1 text-sm text-danger">{errors.faceToFaceDeclaration.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="workType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work type</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Full-time', value: 'full-time' },
+                            { label: 'Part-time', value: 'part-time' },
+                            { label: 'Contract', value: 'contract' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select work type"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="industry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Industry</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Finance', value: 'finance' },
+                            { label: 'Technology', value: 'technology' },
+                            { label: 'Healthcare', value: 'healthcare' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select industry"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="productTypeOffered"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product type offered to customer</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Service', value: 'service' },
+                            { label: 'Software', value: 'software' },
+                            { label: 'Hardware', value: 'hardware' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select product type"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="productOffered"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product offered</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="companyName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company name</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Company A', value: 'company-a' },
+                            { label: 'Company B', value: 'company-b' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select company name"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="positionsInCompany"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Positions in company</FormLabel>
+                        <SearchableSelect
+                          options={[
+                            { label: 'Manager', value: 'manager' },
+                            { label: 'Director', value: 'director' },
+                            { label: 'Owner', value: 'owner' },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select positions in company"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="faceToFaceDeclaration"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Customer met face-to-face?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-wrap gap-4"
+                          >
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="yes" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="no" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </div>
@@ -829,20 +1086,37 @@ export default function IndividualOnboardingFlow() {
                   <p className="text-sm font-semibold text-text">Politically exposed person</p>
                   <div className="mt-4 space-y-4 text-sm text-text-muted">
                     {pepQuestions.map((question) => (
-                      <div key={question.name}>
-                        <p className="mb-2 font-medium text-text">{question.label}</p>
-                        <div className="flex flex-wrap gap-4">
-                          <label className="inline-flex items-center gap-2">
-                            <input type="radio" value="yes" {...register(question.name)} />
-                            <span>Yes</span>
-                          </label>
-                          <label className="inline-flex items-center gap-2">
-                            <input type="radio" value="no" {...register(question.name)} />
-                            <span>No</span>
-                          </label>
-                        </div>
-                        {errors[question.name] && <p className="mt-1 text-sm text-danger">{errors[question.name].message}</p>}
-                      </div>
+                      <FormField
+                        key={question.name}
+                        control={form.control}
+                        name={question.name}
+                        render={({ field }) => (
+                          <FormItem className="space-y-3">
+                            <FormLabel className="text-base">{question.label}</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex flex-wrap gap-4"
+                              >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <RadioGroupItem value="yes" />
+                                  </FormControl>
+                                  <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <RadioGroupItem value="no" />
+                                  </FormControl>
+                                  <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                                </FormItem>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     ))}
                   </div>
                 </div>
@@ -850,49 +1124,81 @@ export default function IndividualOnboardingFlow() {
                 <div className="rounded-3xl border border-border bg-surface p-6">
                   <p className="text-sm font-semibold text-text">Source of wealth</p>
                   <p className="mt-2 text-sm text-text-muted">Choose all that apply.</p>
-                  <div className="mt-4 space-y-3">
-                    {sourceOfWealthOptions.map((option) => (
-                      <label key={option} className="inline-flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-alt p-3 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={(watch('sourceOfWealth') || []).includes(option)}
-                          onChange={() => toggleArrayField('sourceOfWealth', option)}
-                          className="mt-1 h-4 w-4 rounded border-border text-brand-600 focus:ring-brand-500"
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.sourceOfWealth && <p className="mt-2 text-sm text-danger">{errors.sourceOfWealth.message}</p>}
-                  <div className="mt-4">
-                    <Label htmlFor="sourceOfWealthOtherDetails">Other source of wealth</Label>
-                    <Input id="sourceOfWealthOtherDetails" {...register('sourceOfWealthOtherDetails')} error={!!errors.sourceOfWealthOtherDetails} />
-                    {errors.sourceOfWealthOtherDetails && <p className="mt-1 text-sm text-danger">{errors.sourceOfWealthOtherDetails.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="sourceOfWealth"
+                    render={() => (
+                      <FormItem>
+                        <div className="mt-4 space-y-3">
+                          {sourceOfWealthOptions.map((option) => (
+                            <label key={option} className="inline-flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-alt p-3 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={(watch('sourceOfWealth') || []).includes(option)}
+                                onChange={() => toggleArrayField('sourceOfWealth', option)}
+                                className="mt-1 h-4 w-4 rounded border-border text-brand-600 focus:ring-brand-500"
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sourceOfWealthOtherDetails"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel>Other source of wealth</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="rounded-3xl border border-border bg-surface p-6">
                   <p className="text-sm font-semibold text-text">Source of funds</p>
                   <p className="mt-2 text-sm text-text-muted">Choose all that apply.</p>
-                  <div className="mt-4 space-y-3">
-                    {sourceOfFundsOptions.map((option) => (
-                      <label key={option} className="inline-flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-alt p-3 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={(watch('sourceOfFunds') || []).includes(option)}
-                          onChange={() => toggleArrayField('sourceOfFunds', option)}
-                          className="mt-1 h-4 w-4 rounded border-border text-brand-600 focus:ring-brand-500"
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.sourceOfFunds && <p className="mt-2 text-sm text-danger">{errors.sourceOfFunds.message}</p>}
-                  <div className="mt-4">
-                    <Label htmlFor="sourceOfFundsOtherDetails">Other source of funds</Label>
-                    <Input id="sourceOfFundsOtherDetails" {...register('sourceOfFundsOtherDetails')} error={!!errors.sourceOfFundsOtherDetails} />
-                    {errors.sourceOfFundsOtherDetails && <p className="mt-1 text-sm text-danger">{errors.sourceOfFundsOtherDetails.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="sourceOfFunds"
+                    render={() => (
+                      <FormItem>
+                        <div className="mt-4 space-y-3">
+                          {sourceOfFundsOptions.map((option) => (
+                            <label key={option} className="inline-flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-alt p-3 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={(watch('sourceOfFunds') || []).includes(option)}
+                                onChange={() => toggleArrayField('sourceOfFunds', option)}
+                                className="mt-1 h-4 w-4 rounded border-border text-brand-600 focus:ring-brand-500"
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sourceOfFundsOtherDetails"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel>Other source of funds</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </div>
@@ -902,52 +1208,52 @@ export default function IndividualOnboardingFlow() {
             <div className="space-y-6">
               <div className="grid gap-4 rounded-3xl border border-border bg-surface p-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Name</p>
-                  <p className="mt-2 text-sm text-text">{values.fullName}</p>
+                  <Label className="text-text-muted">Name</Label>
+                  <Input value={values.fullName || ''} readOnly className="mt-2 bg-surface-alt" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Email</p>
-                  <p className="mt-2 text-sm text-text">{values.email}</p>
+                  <Label className="text-text-muted">Email</Label>
+                  <Input value={values.email || ''} readOnly className="mt-2 bg-surface-alt" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Phone number</p>
-                  <p className="mt-2 text-sm text-text">{values.contactNumber}</p>
+                  <Label className="text-text-muted">Phone number</Label>
+                  <Input value={values.contactNumber || ''} readOnly className="mt-2 bg-surface-alt" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Nationality</p>
-                  <p className="mt-2 text-sm text-text">{values.nationality}</p>
-                </div>
-              </div>
-              <div className="grid gap-4 rounded-3xl border border-border bg-surface p-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">PEP current public position</p>
-                  <p className="mt-2 text-sm text-text">{values.pepCurrentPublicPosition}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">PEP held public position in last 12 months</p>
-                  <p className="mt-2 text-sm text-text">{values.pepHeldPublicPosition12Months}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">PEP ever held public position</p>
-                  <p className="mt-2 text-sm text-text">{values.pepEverHeldPublicPosition}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Diplomatic immunity</p>
-                  <p className="mt-2 text-sm text-text">{values.diplomaticImmunity}</p>
+                  <Label className="text-text-muted">Nationality</Label>
+                  <Input value={values.nationality || ''} readOnly className="mt-2 bg-surface-alt" />
                 </div>
               </div>
               <div className="grid gap-4 rounded-3xl border border-border bg-surface p-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Source of wealth</p>
-                  <p className="mt-2 text-sm text-text">{(values.sourceOfWealth || []).join(', ') || 'Not provided'}</p>
+                  <Label className="text-text-muted">PEP current public position</Label>
+                  <Input value={values.pepCurrentPublicPosition || ''} readOnly className="mt-2 bg-surface-alt" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Source of funds</p>
-                  <p className="mt-2 text-sm text-text">{(values.sourceOfFunds || []).join(', ') || 'Not provided'}</p>
+                  <Label className="text-text-muted">PEP held public position in last 12 months</Label>
+                  <Input value={values.pepHeldPublicPosition12Months || ''} readOnly className="mt-2 bg-surface-alt" />
+                </div>
+                <div>
+                  <Label className="text-text-muted">PEP ever held public position</Label>
+                  <Input value={values.pepEverHeldPublicPosition || ''} readOnly className="mt-2 bg-surface-alt" />
+                </div>
+                <div>
+                  <Label className="text-text-muted">Diplomatic immunity</Label>
+                  <Input value={values.diplomaticImmunity || ''} readOnly className="mt-2 bg-surface-alt" />
+                </div>
+              </div>
+              <div className="grid gap-4 rounded-3xl border border-border bg-surface p-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-text-muted">Source of wealth</Label>
+                  <Input value={(values.sourceOfWealth || []).join(', ') || 'Not provided'} readOnly className="mt-2 bg-surface-alt" />
+                </div>
+                <div>
+                  <Label className="text-text-muted">Source of funds</Label>
+                  <Input value={(values.sourceOfFunds || []).join(', ') || 'Not provided'} readOnly className="mt-2 bg-surface-alt" />
                 </div>
                 <div className="sm:col-span-2">
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Other details</p>
-                  <p className="mt-2 text-sm text-text">{values.sourceOfWealthOtherDetails || values.sourceOfFundsOtherDetails || 'None'}</p>
+                  <Label className="text-text-muted">Other details</Label>
+                  <Input value={values.sourceOfWealthOtherDetails || values.sourceOfFundsOtherDetails || 'None'} readOnly className="mt-2 bg-surface-alt" />
                 </div>
               </div>
               <div className="rounded-3xl border border-border bg-surface p-6">
@@ -971,18 +1277,45 @@ export default function IndividualOnboardingFlow() {
                   />
                 </div>
                 <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                  <div>
-                    <Label htmlFor="signatureName">Signature</Label>
-                    <Input id="signatureName" {...register('signatureName')} placeholder="Your name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="signatureRole">Role</Label>
-                    <Input id="signatureRole" {...register('signatureRole')} placeholder="e.g. CEO" />
-                  </div>
-                  <div>
-                    <Label htmlFor="signatureDate">Date</Label>
-                    <Input id="signatureDate" type="date" {...register('signatureDate')} />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="signatureName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Signature</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="signatureRole"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. CEO" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="signatureDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
               <div className="grid gap-4 rounded-3xl border border-border bg-surface p-4 sm:grid-cols-2">
@@ -1047,7 +1380,8 @@ export default function IndividualOnboardingFlow() {
               </Button>
             ) : null}
           </div>
-        </form>
+          </form>
+        </Form>
       </Card>
     </div>
   )
