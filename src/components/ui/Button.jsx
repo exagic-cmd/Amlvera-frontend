@@ -43,6 +43,7 @@ const Button = React.forwardRef(function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  loading,
   ...props
 }, ref) {
   const Comp = asChild ? Slot.Root : "button"
@@ -54,6 +55,7 @@ const Button = React.forwardRef(function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      {...(loading ? { loading: loading.toString() } : {})}
       {...props} />
   );
 })
